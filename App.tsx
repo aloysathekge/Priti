@@ -1,6 +1,7 @@
 import { StatusBar } from "expo-status-bar";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Ionicons, Entypo } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   FlatList,
   Pressable,
@@ -19,14 +20,48 @@ export interface Notes {
 export default function App() {
   const [note, setNote] = useState("");
   const [notes, setNotes] = useState<Notes[]>([]);
+
+  useEffect(() => {
+    const getNotes = async () => {
+      try {
+        const notes = await AsyncStorage.getItem("notes");
+        if (notes !== null) {
+          // value previously stored
+          setNotes(JSON.parse(notes));
+        }
+      } catch (e) {
+        // error reading value
+        console.error("error in loading notes ");
+      }
+    };
+    getNotes();
+  }, []);
+  useEffect(() => {
+    const saveNotes = async () => {
+      try {
+        await AsyncStorage.setItem("notes", JSON.stringify(notes));
+      } catch (error) {
+        console.error("Error saving notes:", error);
+      }
+    };
+    saveNotes();
+  }, [notes]);
+
   const addNote = () => {
     const newNote: Notes = {
       title: note,
       done: false,
     };
     setNotes((previous) => [...previous, newNote]);
+    setNote("");
   };
-  const toggleDone = () => {};
+  const toggleDone = (selectedNote: Notes) => {
+    setNotes((previous) =>
+      previous.map((note) =>
+        note === selectedNote ? { ...note, done: !note.done } : note
+      )
+    );
+  };
   const deleteItem = (selectedNote: Notes) => {
     setNotes((prevNotes) => prevNotes.filter((note) => note !== selectedNote));
   };
@@ -34,7 +69,7 @@ export default function App() {
   const renderNote = ({ item }: { item: Notes }) => {
     return (
       <View style={styles.notesContainer}>
-        <TouchableOpacity onPress={toggleDone} style={styles.todo}>
+        <TouchableOpacity onPress={() => toggleDone(item)} style={styles.todo}>
           {item.done && (
             <Ionicons name="md-checkmark-circle" size={32} color="green" />
           )}
@@ -82,10 +117,12 @@ export default function App() {
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: 20,
+    flex: 1,
+    padding: 10,
   },
   form: {
     marginVertical: 20,
+    padding: 15,
     flexDirection: "row",
     alignItems: "center",
   },
@@ -98,13 +135,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   button: {
+    flex: 1,
     marginLeft: 12,
+    alignSelf: "flex-end",
     borderRadius: 4,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "blue",
-    height: 40,
-    width: 100,
+    padding: 10,
   },
 
   todo: {
