@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { NoteCard } from "../NotesCard";
+import NoteCard from "../NotesCard";
 import { RootState, store } from "../store"; // Update the path accordingly
 import { Notes } from "../types"; // Import the 'Notes' interface
 import { addNote, deleteNote, setNotes, toggleNote } from "../BalanceSlice";
